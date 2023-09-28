@@ -1,10 +1,11 @@
 
 import { useEffect, useState } from 'react';
 import Card from 'react-bootstrap/Card';
-
 import './App.css';
 
+
 function App() {
+  const controller = new AbortController();
   const [menus, setMenu] = useState([]);
   const [text, setTextCou] = useState("")
   console.log(text)
@@ -12,23 +13,36 @@ function App() {
   
 
 
-  async function getMenu(a){
-    const res = await fetch(`https://forkify-api.herokuapp.com/api/v2/recipes?search=${text}`);
-    const data = await res.json();
-    console.log(data.data.recipes)
-    setMenu(data.data.recipes)
+ 
+    useEffect(function(){
+   
+      async function getMenu(a){
+        try {
+        const res = await fetch(`https://forkify-api.herokuapp.com/api/v2/recipes?search=${text}`,{signal:controller.signal});
+        const data = await res.json();
+        console.log(data.data.recipes)
+        setMenu(data.data.recipes)
+      }
+      
+     catch (error) {
+      console.log(error)
+      
+    }
   }
-  useEffect(function(){
-    getMenu()
+    text &&  getMenu()
+    
+    return function(){
+      controller.abort();
+    }
   },[text])
   
-
+ 
 
 
   return (
     <div className="App">
      <Header />
-     <InputArea setTextCou={setTextCou} getMenu={getMenu}/>
+     <InputArea setTextCou={setTextCou}/>
      <Menu menus={menus} />
      <Footer />
     </div>
@@ -57,7 +71,7 @@ function Header(){
 
 }
 
-function InputArea({setTextCou , getMenu}){
+function InputArea({setTextCou}){
   return(
     <>
       <input placeholder="Name of cuisine" style={{
@@ -69,6 +83,7 @@ function InputArea({setTextCou , getMenu}){
 
     }} onChange={(e) => {
         setTextCou(e.target.value)
+       
       }}/>
     </>
   )
